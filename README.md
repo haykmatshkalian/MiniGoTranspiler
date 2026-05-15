@@ -25,50 +25,110 @@ Run all commands from the project directory:
 cd /Users/hayk/Desktop/MiniGoTranspiler
 ```
 
-Compile the Java transpiler:
+The easiest way to run the whole project is with `make`:
 
 ```bash
-javac $(find src -name '*.java')
+make run
 ```
 
-Run the transpiler using the default input file:
+This command does the full pipeline:
 
-```bash
-java -cp src Main
+```text
+compile Java transpiler
+-> read input.go
+-> generate output.c
+-> check output.c with clang
+-> compile output.c into ./output
+-> run ./output
 ```
 
-By default, this reads:
+The default MiniGo input file is:
 
 ```text
 input.go
 ```
 
-And writes:
+The generated C file is:
 
 ```text
 output.c
 ```
 
-You will also see the generated C code printed in the terminal.
+The compiled C executable is:
 
-## Run With Custom Files
+```text
+output
+```
 
-You can pass an input MiniGo file and an output C file:
+## Make Commands
+
+Use these commands from the project directory:
+
+```bash
+make help
+```
+
+Shows all available commands.
+
+```bash
+make compile
+```
+
+Compiles the Java transpiler only.
+
+```bash
+make transpile
+```
+
+Compiles Java and generates `output.c` from `input.go`.
+
+```bash
+make check-c
+```
+
+Generates `output.c` and checks that it is valid C syntax.
+
+```bash
+make build-c
+```
+
+Generates `output.c`, checks it, and compiles it into the executable `output`.
+
+```bash
+make run-c
+```
+
+Builds and runs the generated C program.
+
+```bash
+make run
+```
+
+Same as `make run-c`. This is the main command you will usually use.
+
+```bash
+make clean
+```
+
+Removes Java `.class` files and the compiled C executable.
+
+## Manual Run Without Make
+
+You usually do not need this if `make run` works.
+
+Compile the Java transpiler manually:
+
+```bash
+javac $(find src -name '*.java')
+```
+
+Run the transpiler manually:
 
 ```bash
 java -cp src Main input.go output.c
 ```
 
-Example:
-
-```bash
-java -cp src Main examples/simple.go generated/simple.c
-```
-
-The first argument is the MiniGo input file.
-The second argument is the generated C output file.
-
-## Test The Generated C
+Check the generated C manually:
 
 If you have `clang` installed, check that the generated C is valid:
 
@@ -76,22 +136,21 @@ If you have `clang` installed, check that the generated C is valid:
 clang -fsyntax-only output.c
 ```
 
-If there is no output, the C syntax is valid.
-
-You can also compile and run it:
+Compile and run the generated C manually:
 
 ```bash
 clang output.c -o output
 ./output
 ```
 
-## Clean Java Build Files
-
-The `javac` command creates `.class` files inside `src`.
-To remove them:
+Manual full flow:
 
 ```bash
-find src -name '*.class' -delete
+javac $(find src -name '*.java')
+java -cp src Main input.go output.c
+clang -fsyntax-only output.c
+clang output.c -o output
+./output
 ```
 
 ## Minimal Working Example
@@ -108,8 +167,7 @@ func main() {
 Run:
 
 ```bash
-javac $(find src -name '*.java')
-java -cp src Main
+make run
 ```
 
 Generated `output.c`:
