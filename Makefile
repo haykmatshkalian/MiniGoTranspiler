@@ -1,5 +1,5 @@
 SRC_DIR := src
-INPUT := input.go
+INPUTS := input1.go input2.go
 OUTPUT_C := output.c
 OUTPUT_BIN := output
 JAVA_MAIN := Main
@@ -12,7 +12,7 @@ compile:
 	javac $$(find $(SRC_DIR) -name '*.java')
 
 transpile: compile
-	java -cp $(SRC_DIR) $(JAVA_MAIN) $(INPUT) $(OUTPUT_C)
+	java -cp $(SRC_DIR) $(JAVA_MAIN) $(INPUTS) $(OUTPUT_C)
 
 check-c: transpile
 	clang -fsyntax-only $(OUTPUT_C)
@@ -27,14 +27,14 @@ run: run-c
 
 clean:
 	find $(SRC_DIR) -name '*.class' -delete
-	rm -f $(OUTPUT_BIN)
+	rm -f $(OUTPUT_BIN) $(OUTPUT_C)
 
 help:
 	@echo "MiniGo Transpiler commands:"
 	@echo "  make compile    Compile the Java transpiler"
-	@echo "  make transpile  Generate output.c from input.go"
+	@echo "  make transpile  Generate output.c from input1.go input2.go"
 	@echo "  make check-c    Check generated C syntax with clang"
 	@echo "  make build-c    Build generated C into ./output"
 	@echo "  make run-c      Build and run generated C"
 	@echo "  make run        Same as make run-c"
-	@echo "  make clean      Remove Java .class files and ./output"
+	@echo "  make clean      Remove Java .class files, ./output, and output.c"

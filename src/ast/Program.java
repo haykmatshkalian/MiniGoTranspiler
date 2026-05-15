@@ -1,19 +1,34 @@
 package ast;
 
-import ast.statements.Statement;
-import ast.statements.BlockStatement;
-
 import java.util.List;
 
 public class Program {
 
-    public final BlockStatement mainBlock;
+    public final List<Module> modules;
 
-    public Program(BlockStatement mainBlock) {
-        this.mainBlock = mainBlock;
+    public Program(List<Module> modules) {
+        this.modules = modules;
     }
 
-    public List<Statement> statements() {
-        return mainBlock.statements;
+    public FunctionDeclaration mainFunction() {
+        FunctionDeclaration main = null;
+
+        for (Module module : modules) {
+            for (FunctionDeclaration function : module.functions) {
+                if (function.isMain()) {
+                    if (main != null) {
+                        throw new RuntimeException("Program error: multiple main functions found");
+                    }
+
+                    main = function;
+                }
+            }
+        }
+
+        if (main == null) {
+            throw new RuntimeException("Program error: no main function found");
+        }
+
+        return main;
     }
 }

@@ -1,14 +1,12 @@
 # MiniGo Transpiler
 
 MiniGo Transpiler is a small educational compiler project written in Java.
-It transpiles a tiny subset of Go-like syntax into valid C code.
+It transpiles a tiny Go-like language into valid C code.
 
-This is not a real Go compiler. It intentionally supports only a very small integer-based language so the compiler pipeline stays easy to understand.
-
-The pipeline is:
+This is not a real Go compiler. MiniGo intentionally supports only a small subset of Go-like syntax so the compiler pipeline stays clean and understandable.
 
 ```text
-MiniGo source
+MiniGo source files
 -> Lexer
 -> Tokens
 -> Parser
@@ -17,35 +15,32 @@ MiniGo source
 -> output.c
 ```
 
-## How To Run
+## Quick Run
 
-Run all commands from the project directory:
+Run everything from the project directory:
 
 ```bash
 cd /Users/hayk/Desktop/MiniGoTranspiler
-```
-
-The easiest way to run the whole project is with `make`:
-
-```bash
 make run
 ```
 
-This command does the full pipeline:
+`make run` does the full flow:
 
 ```text
-compile Java transpiler
--> read input.go
--> generate output.c
+compile Java files
+-> transpile input1.go and input2.go into output.c
 -> check output.c with clang
 -> compile output.c into ./output
 -> run ./output
 ```
 
-The default MiniGo input file is:
+## Default Files
+
+The default MiniGo input files are:
 
 ```text
-input.go
+input1.go
+input2.go
 ```
 
 The generated C file is:
@@ -62,105 +57,144 @@ output
 
 ## Make Commands
 
-Use these commands from the project directory:
+Show commands:
 
 ```bash
 make help
 ```
 
-Shows all available commands.
+Compile the Java transpiler:
 
 ```bash
 make compile
 ```
 
-Compiles the Java transpiler only.
+Generate `output.c`:
 
 ```bash
 make transpile
 ```
 
-Compiles Java and generates `output.c` from `input.go`.
+Check that generated C is valid:
 
 ```bash
 make check-c
 ```
 
-Generates `output.c` and checks that it is valid C syntax.
+Build the generated C program:
 
 ```bash
 make build-c
 ```
 
-Generates `output.c`, checks it, and compiles it into the executable `output`.
+Run the generated C program:
 
 ```bash
 make run-c
 ```
 
-Builds and runs the generated C program.
+Do everything:
 
 ```bash
 make run
 ```
 
-Same as `make run-c`. This is the main command you will usually use.
+Clean generated Java `.class` files and the compiled C executable:
 
 ```bash
 make clean
 ```
 
-Removes Java `.class` files and the compiled C executable.
+## Manual Commands
 
-## Manual Run Without Make
-
-You usually do not need this if `make run` works.
-
-Compile the Java transpiler manually:
-
-```bash
-javac $(find src -name '*.java')
-```
-
-Run the transpiler manually:
-
-```bash
-java -cp src Main input.go output.c
-```
-
-Check the generated C manually:
-
-If you have `clang` installed, check that the generated C is valid:
-
-```bash
-clang -fsyntax-only output.c
-```
-
-Compile and run the generated C manually:
-
-```bash
-clang output.c -o output
-./output
-```
+You usually do not need these because `make run` does the work.
 
 Manual full flow:
 
 ```bash
 javac $(find src -name '*.java')
-java -cp src Main input.go output.c
+java -cp src Main input1.go input2.go output.c
 clang -fsyntax-only output.c
 clang output.c -o output
 ./output
 ```
 
-## Minimal Working Example
+## Module Example
 
-Write this in `input.go`:
+MiniGo now supports multiple files using simple modules.
+
+`input1.go`:
 
 ```go
+module m1
+
 func main() {
-    x := 5 + 3
-    println(x)
+    ticketPrice := 45
+    visitorCount := 6
+    serviceFee := 12
+    discountLimit := 250
+
+    ticketSubtotal := ticketPrice * visitorCount
+    estimatedTotal := ticketSubtotal + serviceFee
+    averagePerVisitor := estimatedTotal / visitorCount
+
+    println(ticketSubtotal)
+    println(estimatedTotal)
+    println(averagePerVisitor)
+
+    if estimatedTotal >= discountLimit {
+        discountAmount := estimatedTotal / 10
+        finalTotal := estimatedTotal - discountAmount
+        println(discountAmount)
+        println(finalTotal)
+    }
+
+    if averagePerVisitor < ticketPrice {
+        println(averagePerVisitor)
+    }
+
+    m2.printBudgetReport()
+    m2.printSafetyReport()
+
+    for estimatedTotal < 0 {
+        println(estimatedTotal)
+    }
+}
+```
+
+`input2.go`:
+
+```go
+module m2
+
+func printBudgetReport() {
+    mealBudget := 80
+    transportBudget := 35
+    museumBudget := 60
+    emergencyReserve := 25
+
+    plannedExpenses := mealBudget + transportBudget + museumBudget
+    requiredBudget := plannedExpenses + emergencyReserve
+
+    println(plannedExpenses)
+    println(requiredBudget)
+
+    if requiredBudget > 150 {
+        extraBuffer := requiredBudget - 150
+        println(extraBuffer)
+    }
+}
+
+func printSafetyReport() {
+    expectedVisitors := 6
+    staffMembers := 2
+    visitorsPerStaff := expectedVisitors / staffMembers
+
+    println(visitorsPerStaff)
+
+    if visitorsPerStaff <= 3 {
+        println(1)
+    }
 }
 ```
 
@@ -170,59 +204,176 @@ Run:
 make run
 ```
 
-Generated `output.c`:
+Generated C shape:
 
 ```c
 #include <stdio.h>
 
+void m2_printBudgetReport();
+void m2_printSafetyReport();
+
 int main() {
-    int x = (5 + 3);
-    printf("%d\n", x);
+    int m1_ticketPrice = 45;
+    int m1_visitorCount = 6;
+    int m1_ticketSubtotal = (m1_ticketPrice * m1_visitorCount);
+    printf("%d\n", m1_ticketSubtotal);
+    m2_printBudgetReport();
+    m2_printSafetyReport();
 
     return 0;
 }
 ```
 
-## What Works
+Program output:
 
-Version 1 supports only these MiniGo features.
+```text
+270
+282
+47
+28
+254
+175
+200
+50
+3
+1
+```
 
-### Main Function
+## Module Rules
 
-Every program must start with exactly:
+Every MiniGo file must start with a module declaration:
 
 ```go
-func main() {
-    // statements here
+module m1
+```
+
+Each module can contain functions:
+
+```go
+module m2
+
+func helpMe() {
+    println(123)
 }
 ```
 
-Only `func main()` is supported.
+Exactly one function named `main` must exist across all input files:
+
+```go
+module m1
+
+func main() {
+    println(1)
+}
+```
+
+Functions from another module are called with dot syntax:
+
+```go
+m2.printBudgetReport()
+```
+
+Generated C function names are prefixed:
+
+```text
+m2.printBudgetReport() -> m2_printBudgetReport()
+```
+
+Generated C variable names are also prefixed by module:
+
+```text
+x        in module m1 -> m1_x
+mealBudget in module m2 -> m2_mealBudget
+```
+
+This avoids C name collisions when two modules use the same variable or function name.
+
+## What Works
+
+MiniGo currently supports these features.
+
+### Modules
 
 Works:
 
 ```go
+module m1
+
 func main() {
-    println(1)
+    m2.printBudgetReport()
+}
+```
+
+```go
+module m2
+
+func helpMe() {
+    println(10)
 }
 ```
 
 Does not work:
 
 ```go
-func add() {
-    println(1)
-}
+package main
 ```
 
-### Integer Variables
+MiniGo uses `module`, not real Go `package`.
 
-Variables are declared with `:=`.
-All variables are generated as C `int`.
+### Functions
 
 Works:
 
 ```go
+module m1
+
+func main() {
+    println(1)
+}
+
+func helper() {
+    println(2)
+}
+```
+
+Only functions with no parameters and no return values are supported.
+
+Does not work:
+
+```go
+func add(a int, b int) int {
+    return a + b
+}
+```
+
+### Function Calls
+
+Works:
+
+```go
+m2.printBudgetReport()
+```
+
+Function calls are statements only.
+
+Does not work:
+
+```go
+x := m2.printBudgetReport()
+```
+
+Return values are not supported yet.
+
+### Integer Variables
+
+Variables are declared with `:=`.
+All variables become C `int`.
+
+Works:
+
+```go
+module m1
+
 func main() {
     x := 10
     y := x + 5
@@ -230,51 +381,32 @@ func main() {
 }
 ```
 
-Generated C uses:
+Generated C:
 
 ```c
-int x = 10;
-int y = (x + 5);
+int m1_x = 10;
+int m1_y = (m1_x + 5);
 ```
 
 ### Integer Literals
 
-Only whole numbers are supported.
-
 Works:
 
 ```go
-func main() {
-    x := 123
-    println(x)
-}
+value := 123
 ```
 
 Does not work:
 
 ```go
-func main() {
-    x := 1.5
-}
+value := 1.5
 ```
 
-### Identifiers
-
-Variable names can contain letters, digits, and underscores.
-They must start with a letter.
-
-Works:
-
-```go
-func main() {
-    count_1 := 7
-    println(count_1)
-}
-```
+Floats are not supported.
 
 ### Arithmetic
 
-Supported arithmetic operators:
+Supported operators:
 
 ```text
 +  -  *  /
@@ -283,21 +415,14 @@ Supported arithmetic operators:
 Works:
 
 ```go
-func main() {
-    x := 5 + 3 * 2
-    y := (5 + 3) * 2
-    println(x)
-    println(y)
-}
+result := ((20 + 4) * 2) - (20 / 4)
 ```
 
-The parser supports precedence:
+Operator precedence is supported:
 
 ```text
-* and / happen before + and -
+* and / bind tighter than + and -
 ```
-
-Generated C preserves expressions with parentheses.
 
 ### Comparisons
 
@@ -310,70 +435,52 @@ Supported comparison operators:
 Works:
 
 ```go
-func main() {
-    x := 10
-    if x >= 5 {
-        println(x)
-    }
+if x >= 10 {
+    println(x)
 }
 ```
 
-Comparisons are integer comparisons.
+Comparisons are integer-based in generated C.
 
 ### Println
 
-`println()` prints one integer expression.
-
-Works:
+`println` prints one integer expression:
 
 ```go
-func main() {
-    x := 10
-    println(x)
-    println(5 + 3)
-}
+println(x)
+println(5 + 3)
 ```
 
-Generated C uses:
+Generated C:
 
 ```c
-printf("%d\n", value);
+printf("%d\n", m1_x);
 ```
 
 Does not work:
 
 ```go
-func main() {
-    println("hello")
-}
+println("hello")
 ```
 
 Strings are not supported.
 
 ### If Statements
 
-`if` statements support a condition and a block.
-
 Works:
 
 ```go
-func main() {
-    x := 10
-    if x > 5 {
-        println(x)
-    }
+if x > 5 {
+    println(x)
 }
 ```
 
-Nested blocks also work:
+Nested `if` statements work:
 
 ```go
-func main() {
-    x := 10
-    if x > 5 {
-        if x != 0 {
-            println(x)
-        }
+if x > 0 {
+    if x < 100 {
+        println(x)
     }
 }
 ```
@@ -381,95 +488,50 @@ func main() {
 Does not work:
 
 ```go
-func main() {
-    x := 10
-    if x > 5 {
-        println(x)
-    } else {
-        println(0)
-    }
+if x > 5 {
+    println(x)
+} else {
+    println(0)
 }
 ```
 
-`else` is not supported.
+`else` is not supported yet.
 
 ### For Loops
 
-MiniGo supports only simple condition-only `for` loops.
-They are generated as C `while` loops.
-
-Works:
+Only condition-only loops are supported:
 
 ```go
-func main() {
-    x := 1
-    for x < 3 {
-        println(x)
-    }
+for x < 3 {
+    println(x)
 }
 ```
 
 Generated C:
 
 ```c
-while ((x < 3)) {
-    printf("%d\n", x);
+while (m1_x < 3) {
+    printf("%d\n", m1_x);
 }
 ```
 
-Important: there is currently no assignment statement, so loops cannot update variables yet.
-That means many loops will be infinite if you compile and run the generated C.
-
-This works syntactically:
-
-```go
-func main() {
-    x := 1
-    for x < 3 {
-        println(x)
-    }
-}
-```
-
-But it runs forever because `x` never changes.
-
-### Blocks
-
-Blocks use braces:
-
-```go
-{
-    println(1)
-}
-```
-
-Blocks are supported inside:
-
-```text
-func main
-if
-for
-```
+Important: assignment is not supported yet, so you cannot update `x` inside the loop.
+If the loop condition starts true, the generated C program can run forever.
 
 ## What Does Not Work
 
-This project deliberately does not support full Go.
+MiniGo does not support:
 
-Unsupported features include:
-
-- `package`
-- `import`
-- functions other than `main`
+- real Go `package`
+- real Go `import`
 - function parameters
 - function return values
-- `return` in MiniGo source
-- variable reassignment with `=`
+- `return`
+- assignment with `=`
 - `else`
-- `else if`
-- `for` loops with init/update clauses
 - `break`
 - `continue`
-- booleans
+- booleans as a separate type
 - strings
 - floats
 - arrays
@@ -482,96 +544,49 @@ Unsupported features include:
 - goroutines
 - channels
 - comments
-- real Go type inference
 - Go standard library calls
+- real Go type checking
+- real Go runtime behavior
 
-## Syntax Rules
+## Syntax Summary
 
-MiniGo is intentionally strict.
-
-Statements do not need semicolons:
-
-```go
-func main() {
-    x := 5
-    println(x)
-}
-```
-
-Parentheses are supported in expressions:
+A valid multi-file MiniGo program looks like this:
 
 ```go
-func main() {
-    x := (5 + 3) * 2
-    println(x)
-}
-```
+module moduleName
 
-Conditions do not require parentheses:
+func functionName() {
+    variable := 123
+    println(variable)
+    otherModule.otherFunction()
 
-```go
-func main() {
-    x := 5
-    if x > 3 {
-        println(x)
+    if variable > 0 {
+        println(variable)
+    }
+
+    for variable < 0 {
+        println(variable)
     }
 }
 ```
 
-This is also accepted because parentheses are valid expressions:
+One file somewhere must contain:
 
 ```go
 func main() {
-    x := 5
-    if (x > 3) {
-        println(x)
-    }
-}
-```
-
-## Full Example
-
-`input.go`:
-
-```go
-func main() {
-    x := 5 + 3 * 2
-    println(x)
-    if x >= 10 {
-        println(x)
-    }
-    for x < 3 {
-        println(x)
-    }
-}
-```
-
-Generated `output.c`:
-
-```c
-#include <stdio.h>
-
-int main() {
-    int x = (5 + (3 * 2));
-    printf("%d\n", x);
-    if ((x >= 10)) {
-        printf("%d\n", x);
-    }
-    while ((x < 3)) {
-        printf("%d\n", x);
-    }
-
-    return 0;
+    // program starts here
 }
 ```
 
 ## Error Handling
 
-The transpiler throws readable runtime errors when it finds invalid syntax or unsupported characters.
+The transpiler throws readable errors for invalid characters, invalid syntax, missing `main`, duplicate `main`, duplicate generated function names, or unknown function calls.
 
-Example invalid input:
+Invalid character example:
 
 ```go
+module m1
+
 func main() {
     x := 5 @ 3
 }
@@ -580,21 +595,23 @@ func main() {
 Possible error:
 
 ```text
-Lexer error at line 2, column 12: unexpected character '@'
+Lexer error at line 4, column 12: unexpected character '@'
 ```
 
-Example parser error:
+Unknown function example:
 
 ```go
+module m1
+
 func main() {
-    println(5
+    m2.missing()
 }
 ```
 
 Possible error:
 
 ```text
-Parser error at line 3, column 1: Expected RPAREN but got RBRACE
+Program error: unknown function call 'm2.missing()'
 ```
 
 ## Project Structure
@@ -610,6 +627,8 @@ src/
  │    └── Parser.java
  │
  ├── ast/
+ │    ├── FunctionDeclaration.java
+ │    ├── Module.java
  │    ├── Program.java
  │    │
  │    ├── expressions/
@@ -621,6 +640,7 @@ src/
  │    └── statements/
  │         ├── BlockStatement.java
  │         ├── ForStatement.java
+ │         ├── FunctionCallStatement.java
  │         ├── IfStatement.java
  │         ├── PrintStatement.java
  │         ├── Statement.java
@@ -634,200 +654,82 @@ src/
 
 ## How The Compiler Works
 
-### 1. Lexer
+The lexer turns source text into tokens.
 
-The lexer reads raw MiniGo source code and produces tokens.
+The parser reads tokens and builds AST objects such as `Module`, `FunctionDeclaration`, `VariableDeclaration`, `IfStatement`, and `BinaryExpression`.
 
-Example:
-
-```go
-x := 5 + 3
-```
-
-Becomes tokens like:
+The C generator walks the AST and emits C code. During generation it prefixes symbols:
 
 ```text
-IDENTIFIER(x)
-DECLARE(:=)
-NUMBER(5)
-PLUS(+)
-NUMBER(3)
+module m1 variable x       -> m1_x
+module m2 function helpMe  -> m2_printBudgetReport
 ```
 
-### 2. Parser
-
-The parser reads tokens and builds an AST.
-It uses recursive descent parsing.
-
-Important parser methods include:
-
-- `parseExpression()`
-- `parseComparison()`
-- `parseAddition()`
-- `parseMultiplication()`
-- `parsePrimary()`
-
-### 3. AST
-
-The AST represents the program as Java objects.
-
-Examples:
-
-- `Program`
-- `VariableDeclaration`
-- `PrintStatement`
-- `IfStatement`
-- `ForStatement`
-- `BinaryExpression`
-- `NumberExpression`
-- `IdentifierExpression`
-
-### 4. C Code Generator
-
-The code generator walks the AST and produces C code.
-
-Examples:
-
-```go
-println(x)
-```
-
-Becomes:
-
-```c
-printf("%d\n", x);
-```
-
-And:
-
-```go
-for x < 10 {
-    println(x)
-}
-```
-
-Becomes:
-
-```c
-while ((x < 10)) {
-    printf("%d\n", x);
-}
-```
+The generated C is then checked and compiled with `clang`.
 
 ## Good Test Cases
 
-### Arithmetic Precedence
+### Cross-Module Function Call
 
 ```go
+module m1
+
 func main() {
-    x := 5 + 3 * 2
-    println(x)
+    m2.printBudgetReport()
 }
 ```
 
-Expected behavior:
-
-```text
-3 * 2 is grouped before 5 +
-```
-
-### Parentheses
-
 ```go
-func main() {
-    x := (5 + 3) * 2
-    println(x)
+module m2
+
+func helpMe() {
+    println(42)
 }
 ```
 
-Expected behavior:
-
-```text
-5 + 3 is grouped before * 2
-```
-
-### If Statement
+### Same Variable Name In Different Modules
 
 ```go
+module m1
+
 func main() {
-    x := 10
-    if x == 10 {
-        println(x)
-    }
+    value := 1
+    println(value)
+    m2.printValue()
 }
 ```
 
-### Nested If Statement
-
 ```go
-func main() {
-    x := 10
-    if x > 0 {
-        if x < 20 {
-            println(x)
-        }
-    }
+module m2
+
+func printValue() {
+    value := 2
+    println(value)
 }
 ```
 
-### Lexer Error
+Generated C uses `m1_value` and `m2_value`.
+
+### Missing Function Error
 
 ```go
+module m1
+
 func main() {
-    x := 5 @ 3
+    m2.nope()
 }
 ```
 
-Expected behavior:
+This should fail before C compilation.
 
-```text
-The lexer reports an invalid character.
-```
+## Current Best Next Features
 
-### Parser Error
+Good next steps:
 
-```go
-func main() {
-    println(5
-}
-```
-
-Expected behavior:
-
-```text
-The parser reports a missing closing parenthesis.
-```
-
-## Current Limitations
-
-The biggest current limitation is that variables can be declared but not reassigned.
-
-This means you can write:
-
-```go
-x := 1
-```
-
-But you cannot write:
-
-```go
-x = x + 1
-```
-
-Because reassignment is not implemented yet.
-
-This affects `for` loops because there is no way to update the loop variable inside the loop.
-
-The next natural feature would be assignment statements:
-
-```go
-func main() {
-    x := 1
-    for x < 3 {
-        println(x)
-        x = x + 1
-    }
-}
-```
-
-That is not supported in the current version.
+- assignment statements: `x = x + 1`
+- `else`
+- function parameters
+- function return values
+- comments
+- simple booleans
+- strings

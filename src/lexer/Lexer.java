@@ -106,6 +106,10 @@ public class Lexer {
                     tokens.add(makeToken(TokenType.RBRACE, "}"));
                     break;
 
+                case '.':
+                    tokens.add(makeToken(TokenType.DOT, "."));
+                    break;
+
                 case '<':
                     tokens.add(makeToken(TokenType.LESS, "<"));
                     break;
@@ -186,6 +190,9 @@ public class Lexer {
         String word = sb.toString();
 
         switch (word) {
+            case "module":
+                return new Token(TokenType.MODULE, word, startLine, startColumn);
+
             case "func":
                 return new Token(TokenType.FUNC, word, startLine, startColumn);
 

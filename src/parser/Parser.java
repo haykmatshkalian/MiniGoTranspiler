@@ -3,10 +3,13 @@ package parser;
 import lexer.Token;
 import lexer.TokenType;
 
+import ast.FunctionDeclaration;
+import ast.Module;
 import ast.Program;
 
 import ast.statements.BlockStatement;
 import ast.statements.ForStatement;
+import ast.statements.FunctionCallStatement;
 import ast.statements.IfStatement;
 import ast.statements.Statement;
 import ast.statements.VariableDeclaration;
@@ -30,16 +33,42 @@ public class Parser {
     }
 
     public Program parse() {
+        List<Module> modules = new ArrayList<>();
+        modules.add(parseModule());
+        consume(TokenType.EOF);
+        return new Program(modules);
+    }
+
+    public Module parseModule() {
+        consume(TokenType.MODULE);
+        String moduleName = consume(TokenType.IDENTIFIER).value;
+
+        List<FunctionDeclaration> functions = new ArrayList<>();
+
+        while (!match(TokenType.EOF)) {
+            functions.add(parseFunction(moduleName));
+        }
+
+        return new Module(moduleName, functions);
+    }
+
+    private FunctionDeclaration parseFunction(String moduleName) {
         consume(TokenType.FUNC);
-        consume(TokenType.MAIN);
+        String functionName = parseFunctionName();
         consume(TokenType.LPAREN);
         consume(TokenType.RPAREN);
 
-        BlockStatement mainBlock = parseBlock();
+        BlockStatement body = parseBlock();
 
-        consume(TokenType.EOF);
+        return new FunctionDeclaration(moduleName, functionName, body);
+    }
 
-        return new Program(mainBlock);
+    private String parseFunctionName() {
+        if (match(TokenType.MAIN)) {
+            return consume(TokenType.MAIN).value;
+        }
+
+        return consume(TokenType.IDENTIFIER).value;
     }
 
     private BlockStatement parseBlock() {
@@ -72,6 +101,13 @@ public class Parser {
             return parseVariableDeclaration();
         }
 
+        if (
+            current.type == TokenType.IDENTIFIER &&
+            peek().type == TokenType.DOT
+        ) {
+            return parseFunctionCall();
+        }
+
         // println(x)
         if (current.type == TokenType.PRINTLN) {
             return parsePrintStatement();
@@ -97,6 +133,16 @@ public class Parser {
         Expression value = parseExpression();
 
         return new VariableDeclaration(name, value);
+    }
+
+    private FunctionCallStatement parseFunctionCall() {
+        String moduleName = consume(TokenType.IDENTIFIER).value;
+        consume(TokenType.DOT);
+        String functionName = consume(TokenType.IDENTIFIER).value;
+        consume(TokenType.LPAREN);
+        consume(TokenType.RPAREN);
+
+        return new FunctionCallStatement(moduleName, functionName);
     }
 
     private PrintStatement parsePrintStatement() {

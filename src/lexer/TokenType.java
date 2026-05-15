@@ -2,6 +2,7 @@ package lexer;
 
 public enum TokenType {
     // Keywords
+    MODULE,
     FUNC,
     MAIN,
     IF,
@@ -13,6 +14,7 @@ public enum TokenType {
     RPAREN,
     LBRACE,
     RBRACE,
+    DOT,
 
     // Operators
     PLUS,
