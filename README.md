@@ -22,7 +22,7 @@ MiniGo source
 Run all commands from the project directory:
 
 ```bash
-cd .../MiniGoTranspiler
+cd /Users/hayk/Desktop/MiniGoTranspiler
 ```
 
 Compile the Java transpiler:
